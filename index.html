@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Stone</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.3/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.3/addons/p5.dom.js"></script> -->
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.3/addons/p5.sound.min.js"></script>-->
+
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/102/three.js"></script> -->
+
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="style.css">
+
+
+    <meta charset="utf-8" />
+</head>
+
+<body>
+
+    <script id="vertexShader" type="x-shader/x-vertex">
+        attribute float vertexDisplacement;
+        uniform float delta;
+        varying float vOpacity;
+        varying vec3 vUv;
+        void main()
+        {
+            vUv = position;
+            vOpacity = vertexDisplacement;
+
+            vec3 p = position;
+            p.x += sin(vertexDisplacement) + 50.0;
+            p.y += cos(vertexDisplacement) + 50.0;
+
+            vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
+            gl_Position = projectionMatrix * modelViewPosition;
+        }
+    </script>
+
+    <script id="fragmentShader" type="x-shader/x-fragment">
+        uniform float delta;
+        varying float vOpacity;
+        varying vec3 vUv;
+
+        void main()
+        {
+            float r = 1.0 + cos(vUv.x * delta);
+            float g = 0.5 + sin(delta) * 0.5;
+            float b = 1.0;
+
+            gl_FragColor = vec4(r, g, b, vOpacity);
+        }
+    </script>
+
+    <div id="app" class="container">
+        <div class="form ">
+            <!-- <div class="row">
+                <div class="col">
+                    <h1>Stone</h1>
+                </div>
+            </div> -->
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="canvaspanel">
+                        <div id="canvas-parent"><canvas id="myCanvas"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-12 panel">
+                    <div class="row">
+                        <div class="col-sm-4">
+
+                            <div class="form-group row">
+                                <label for="widthfield" class="col-sm-4 col-form-label">Width</label>
+                                <div class="col-sm-8 input-group">
+                                    <input type="text" class="form-control" v-model="width" id="widthfield">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">cm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="heightfield" class="col-sm-4 col-form-label">Height</label>
+                                <div class="col-sm-8 input-group">
+                                    <input type="text" class="form-control" v-model="height" id="heightfield">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">cm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="depthfield" class="col-sm-4 col-form-label">Depth</label>
+                                <div class="col-sm-8 input-group">
+                                    <input type="text" class="form-control" v-model="depth" id="depthfield">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">cm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-sm-4"></div>
+                                <div class="col-sm-8">
+                                    <button class="btn btn-primary" v-on:click="updateDimensions">Update</button>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="col-sm-4">
+
+                            <div class="form-group form-row align-items-center">
+                                <label for="typeselect" class="col-sm-4 col-form-label">Type</label>
+                                <div class="col-sm-8">
+                                    <select class="form-control" id="typeselect" v-model="stonetype"
+                                        v-on:change="updateType">
+                                        <option>Marble</option>
+                                        <option>Granite</option>
+                                        <option>Sandstone</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="col-sm-4">Lights</div>
+                                <div class="form-group col-sm-8">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" v-model="redlight" value="red"
+                                            v-on:change="updateLights" id="gridRadios1">
+                                        <label class="form-check-label" for="gridRadios1">Red</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" v-model="greenlight"
+                                            value="green" v-on:change="updateLights" id="gridRadios2">
+                                        <label class="form-check-label" for="gridRadios2">Green</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" v-model="bluelight" value="blue"
+                                            v-on:change="updateLights" id="gridRadios3">
+                                        <label class="form-check-label" for="gridRadios3">Blue</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="form-group form-row ">
+                                <label for="typeselect" class="col-sm-4 col-form-label">Markings</label>
+                            </div>
+                            <div class="form-group form-row">
+                                <div class="col-sm-2">&nbsp;</div>
+                                <div class="col-sm-10">
+                                    <ul>
+                                        <li v-for="mark in markings">
+                                            {{ mark.face }} ({{ mark.x }}, {{ mark.y }})
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+        integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+        crossorigin="anonymous"></script>
+
+    <script src="js/three.js"></script>
+    <script src="js/OrbitControls.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/stone.js"></script>
+
+</body>
+
+</html>
